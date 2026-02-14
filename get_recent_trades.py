@@ -24,17 +24,23 @@ except Exception as e:
     sys.exit(1)
 
 try:
-    trades = api.get_recent_trades(limit=3)
-    if not trades:
+    trades_dict = api.get_trade_history(fetch_all=False)
+    if not trades_dict:
         print("No recent trades")
         sys.exit(0)
-    for t in trades:
-        ts = t.get('time') or t.get('timestamp') or ''
-        sym = t.get('symbol') or t.get('pair') or ''
-        typ = t.get('side') or t.get('type') or ''
-        price = t.get('price') or t.get('rate') or ''
-        vol = t.get('volume') or t.get('amount') or ''
-        print(f"{ts} {sym} {typ} {vol}@{price}")
+    # trades_dict is mapping txid -> trade info; sort by time
+    trades = []
+    for txid, info in trades_dict.items():
+        trades.append((info.get('time',0), txid, info))
+    trades.sort(reverse=True)
+    for t in trades[:3]:
+        info=t[2]
+        ts=info.get('time','')
+        pair=info.get('pair','')
+        typ=info.get('type','')
+        vol=info.get('vol','')
+        price=info.get('price','')
+        print(f"{ts} {pair} {typ} {vol}@{price}")
 except Exception as e:
     print(f"Error fetching trades: {e}")
     sys.exit(1)

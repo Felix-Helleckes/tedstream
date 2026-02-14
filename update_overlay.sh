@@ -1,5 +1,9 @@
 #!/bin/bash
 # Overlay-Update Optimized - Multi-file output for precise layout and styling
+# Ensure single instance via flock
+LOCKFILE="/var/lock/update_overlay.lock"
+exec 200>"$LOCKFILE" || exit 1
+flock -n 200 || exit 0
 TEMP_DIR="/tmp/youtube_stream"
 BOT_DIR="/home/felix/TradingBot"
 LOG_FILE="$BOT_DIR/logs/bot_activity.log"
@@ -49,9 +53,11 @@ while true; do
       {
         printf "LAST TRADES:\n"
         # Mask TXIDs and fetch last 3 trade actions
-        grep -E "BUY|SELL|SHORT OPEN SUCCESS" "$LOG_FILE" | tail -3 | \
-        sed -E "s/(BUY ORDER SUCCESS|SELL ORDER SUCCESS|SHORT OPEN SUCCESS): \{'txid'.*/\1: [EXECUTED]/" | \
-        sed -E 's/.*INFO - //' | sed -E 's/ \| RISK.*$//'
+        /home/felix/youtubestream/get_recent_trades.py > /tmp/recent_trades.$$ 2>/dev/null && tail -n 3 /tmp/recent_trades.$$ | sed -e 's/^/\t/' || true
+        # fallback to logs if API fails
+        grep -E "BUY ORDER SUCCESS|SELL ORDER SUCCESS|SHORT OPEN SUCCESS|EXECUTED|ORDER_FILLED|FILLED|TRADE" "$LOG_FILE" | tail -3 | \
+        sed -E "s/(BUY ORDER SUCCESS|SELL ORDER SUCCESS|SHORT OPEN SUCCESS): \\{'txid'.*/\\1: [EXECUTED]/" | \
+        sed -E 's/.*INFO - //' | sed -E 's/ \\| RISK.*$//'
         printf -- "----------\n"
         # Filter noisy system lines, mask TXIDs, and show last 23 log lines
         grep -vE "Validated trading pairs|Configuration loaded successfully" "$LOG_FILE" | \
@@ -70,13 +76,13 @@ while true; do
         if [[ "$val_str" == *" - "* ]]; then
            qty=$(echo "$val_str" | cut -d' ' -f1)
            eur=$(echo "$val_str" | cut -d'-' -f2 | sed 's/EUR//;s/[ \t]*//')
-           printf "%-5s: %.2f - %.2f Euro\n" "$asset" "$qty" "$eur"
+           printf "%-5s: %.2f - %.2f EUR\n" "$asset" "$qty" "$eur"
         else
-           printf "%-5s: %.2f Euro\n" "$asset" "$val_str"
+           printf "%-5s: %.2f EUR\n" "$asset" "$val_str"
         fi
       done > "$BAL_TMP"
       T_VAL=$(grep '^TOTAL' "/home/felix/youtubestream/balances.txt" | awk '{print $(NF-1)}')
-      printf "\nTOTAL: %.2f Euro\n" "$T_VAL" >> "$BAL_TMP"
+      printf "\nTOTAL: %.2f EUR\n" "$T_VAL" >> "$BAL_TMP"
       sed -i 's/%/\\%/g' "$BAL_TMP"
       mv "$BAL_TMP" "$TEMP_DIR/data_balances.txt"
       

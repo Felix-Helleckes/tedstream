@@ -99,14 +99,10 @@ while true; do
 
     # Risk HUD - only show Trades (Mode removed)
     RISK_TMP="/tmp/risk_list.$$"
-    if [ -s "$BOT_DIR/mode.txt" ]; then
-      MODE=$(cat "$BOT_DIR/mode.txt" | sed 's/^[ \t]*//;s/[ \t]*$//')
-    else
-      MODE=$(grep "|" "$LOG_FILE" 2>/dev/null | grep -E 'RISK' | tail -1 | awk -F'|' '{print $2}' | sed 's/^[ \t]*//;s/[ \t]*$//' || echo "UNKNOWN")
-    fi
     TRADES=$(grep -oE 'Trades: [0-9]+' "$LOG_FILE" 2>/dev/null | tail -1 | awk -F': ' '{print $2}' || echo 0)
-    printf "Mode: %s\nTrades: %s\n" "$MODE" "$TRADES" > "$RISK_TMP"
-    sed -i 's/%/\\%/g' "$RISK_TMP"
+    printf "Trades: %s
+" "$TRADES" > "$RISK_TMP"
+    sed -i 's/%/\%/g' "$RISK_TMP"
     mv "$RISK_TMP" "$TEMP_DIR/data_risk.txt"
 
     last_heavy_update=$now
@@ -119,38 +115,13 @@ while true; do
     ) &
     last_movers_update=$now
   fi
-  if [ $((now - last_news_update)) -ge 180 ]; then
-    (
-      M_LINE=""
-      declare -A FEEDS=(
-        [CoinDesk]="https://www.coindesk.com/arc/outboundfeeds/rss/"
-        [Cointelegraph]="https://cointelegraph.com/rss"
-        [Decrypt]="https://decrypt.co/feed"
-        [TheDefiant]="https://thedefiant.io/feed"
-        [BitcoinMag]="https://bitcoinmagazine.com/feed"
-        [CryptoSlate]="https://cryptoslate.com/feed/"
-        [NewsBTC]="https://www.newsbtc.com/feed/"
-        [BTC-ECHO]="https://www.btc-echo.de/feed/"
-        [Bitcoin2Go]="https://bitcoin2go.de/feed/"
-      )
-      
-      for name in "CoinDesk" "Cointelegraph" "Decrypt" "TheDefiant" "BitcoinMag" "CryptoSlate" "NewsBTC" "BTC-ECHO" "Bitcoin2Go"; do
-        url="${FEEDS[$name]}"
-        titles=$(curl -fsS "$url" 2>/dev/null | sed -n 's/<title>\(.*\)<\/title>/\1/p' | sed 's/^[ \t]*//;s/[ \t]*$//' | sed '/^$/d' | sed 1d | head -n 3)
-        if [ -n "$titles" ]; then
-          block="$name: "
-          first=1
-          while read -r line; do
-            if [ -n "$line" ]; then
-              if [ $first -eq 1 ]; then block="$block$line"; first=0; else block="$block   ***   $line"; fi
-            fi
-          done <<< "$titles"
-          if [ -z "$M_LINE" ]; then M_LINE="$block"; else M_LINE="$M_LINE   ***   $block"; fi
-        fi
-      done
-      echo "${M_LINE:-Market Monitoring Active}" | sed 's/%/\\%/g' > "$TEMP_DIR/news_marquee.txt"
-    ) &
-    last_news_update=$now
+  # News fetched by separate hourly systemd timer (fetch_news.sh)
+  # If the news file exists, the fetcher keeps it updated; otherwise keep a placeholder
+  if [ -f "$TEMP_DIR/news_marquee.txt" ]; then
+    :
+  else
+    echo "Market Monitoring Active" | sed 's/%/\%/g' > "$TEMP_DIR/news_marquee.txt"
+  fi
   fi
   sleep 0.1
 done

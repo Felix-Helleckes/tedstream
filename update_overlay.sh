@@ -53,7 +53,12 @@ while true; do
       {
         printf "LAST TRADES:\n"
         # Mask TXIDs and fetch last 3 trade actions
-        /home/felix/youtubestream/get_recent_trades.py > /tmp/recent_trades.$$ 2>/dev/null && tail -n 3 /tmp/recent_trades.$$ | sed -e 's/^/\t/' || true
+        VENV_PY="\$BOT_DIR/venv/bin/python3"
+        if [ -x "\$VENV_PY" ]; then
+          "\$VENV_PY" /home/felix/youtubestream/get_recent_trades.py > /tmp/recent_trades.$$ 2>/dev/null && tail -n 3 /tmp/recent_trades.$$ | sed -e "s/^/\\t/" || true
+        else
+          /home/felix/youtubestream/get_recent_trades.py > /tmp/recent_trades.$$ 2>/dev/null && tail -n 3 /tmp/recent_trades.$$ | sed -e "s/^/\\t/" || true
+        fi
         # fallback to logs if API fails
         grep -E "BUY ORDER SUCCESS|SELL ORDER SUCCESS|SHORT OPEN SUCCESS|EXECUTED|ORDER_FILLED|FILLED|TRADE" "$LOG_FILE" | tail -3 | \
         sed -E "s/(BUY ORDER SUCCESS|SELL ORDER SUCCESS|SHORT OPEN SUCCESS): \\{'txid'.*/\\1: [EXECUTED]/" | \
@@ -95,7 +100,11 @@ while true; do
 
     # Risk HUD
     RISK_TMP="/tmp/risk_list.$$"
-    MODE=$(grep "|" "$LOG_FILE" 2>/dev/null | grep -E 'RISK' | tail -1 | awk -F'|' '{print $2}' | sed 's/^[ \t]*//;s/[ \t]*$//' || echo "UNKNOWN")
+    if [ -s "$BOT_DIR/mode.txt" ]; then
+      MODE=$(cat "$BOT_DIR/mode.txt" | sed 's/^[ \t]*//;s/[ \t]*$//')
+    else
+      MODE=$(grep "|" "$LOG_FILE" 2>/dev/null | grep -E 'RISK' | tail -1 | awk -F'|' '{print $2}' | sed 's/^[ \t]*//;s/[ \t]*$//' || echo "UNKNOWN")
+    fi
     TRADES=$(grep -oE 'Trades: [0-9]+' "$LOG_FILE" 2>/dev/null | tail -1 | awk -F': ' '{print $2}' || echo 0)
     printf "Mode: %s\nTrades: %s\n" "$MODE" "$TRADES" > "$RISK_TMP"
     sed -i 's/%/\\%/g' "$RISK_TMP"

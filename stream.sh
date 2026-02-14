@@ -32,8 +32,8 @@ ffmpeg -re -f lavfi -i "color=c=black:s=${VIDEO_SIZE}:r=${FPS}" \
        drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf:textfile=$TEMP_DIR/data_balances.txt:reload=1:fontcolor=white:fontsize=16:x=950:y=35, \
        drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:textfile=$TEMP_DIR/header_movers.txt:reload=1:fontcolor=white:fontsize=20:x=950:y=240, \
        drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf:textfile=$TEMP_DIR/data_movers.txt:reload=1:fontcolor=white:fontsize=16:x=950:y=265, \
-       drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:textfile=$TEMP_DIR/header_positions.txt:reload=1:fontcolor=white:fontsize=20:x=950:y=460, \
-       drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf:textfile=$TEMP_DIR/data_positions.txt:reload=1:fontcolor=white:fontsize=16:x=950:y=485, \
+       drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:textfile=$TEMP_DIR/header_positions.txt:reload=1:fontcolor=white:fontsize=20:x=950:y=450, \
+       drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf:textfile=$TEMP_DIR/data_positions.txt:reload=1:fontcolor=white:fontsize=16:x=950:y=475, \
        drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:textfile=$TEMP_DIR/header_risk.txt:reload=1:fontcolor=white:fontsize=20:x=950:y=600, \
        drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf:textfile=$TEMP_DIR/data_risk.txt:reload=1:fontcolor=white:fontsize=14:x=950:y=625, \
        drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf:textfile=$TEMP_DIR/news_marquee.txt:reload=1:fontcolor=white:fontsize=18:x=w-mod(max(t*100\\,0)\\,w+text_w):y=695, \

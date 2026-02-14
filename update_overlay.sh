@@ -122,6 +122,5 @@ while true; do
   else
     echo "Market Monitoring Active" | sed 's/%/\%/g' > "$TEMP_DIR/news_marquee.txt"
   fi
-  fi
   sleep 0.1
 done

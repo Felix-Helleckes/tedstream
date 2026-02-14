@@ -65,6 +65,7 @@ while true; do
         # Filter noisy system lines, mask TXIDs, and show last 23 log lines
         grep -vE "Validated trading pairs|Configuration loaded successfully" "$LOG_FILE" | \
         sed -E "s/'txid': '[^']+'/'txid': [REDACTED]/g" | \
+        /home/felix/youtubestream/format_trade_line.py | \
         tail -23 2>/dev/null | sed -E 's/ \| RISK.*$//' | sed -E 's/^[0-9]{4}-[0-9]{2}-[0-9]{2} ([0-9]{2}:[0-9]{2}:[0-9]{2}),[0-9]{3}/\1/' | tac
       } > "$PORT_TMP"
       sed -i 's/%/\\%/g' "$PORT_TMP"

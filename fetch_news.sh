@@ -15,7 +15,7 @@ FEEDS=(
   "BitcoinMag|https://bitcoinmagazine.com/feed"
   "CryptoSlate|https://cryptoslate.com/feed/"
   "NewsBTC|https://www.newsbtc.com/feed/"
-  "TheBlock|https://www.theblock.co/feed"
+  "Bitcoinist|https://bitcoinist.com/feed/"
   "BeInCrypto|https://www.beincrypto.com/feed/"
 )
 # Number of headlines per feed

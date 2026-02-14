@@ -66,13 +66,14 @@ fi
 # Atomic move
 mv "$OUT_TMP" "$OUT_FILE"
 chmod 644 "$OUT_FILE"
-exit 0
 
 # Create single-line marquee version for ffmpeg scrolling
 if [ -f "$OUT_FILE" ]; then
-  awk 'NF{if(s!=) printf("   ***   ") ; printf("%s", $0); s=1}' "$OUT_FILE" > "$TEMP_DIR/news_marquee_line.txt" || true
+  awk 'NF{if(s!="") printf("   ***   "); printf("%s", $0); s="1"}' "$OUT_FILE" > "$TEMP_DIR/news_marquee_line.txt" || true
   if command -v iconv >/dev/null 2>&1; then
     iconv -f utf-8 -t utf-8 -c "$TEMP_DIR/news_marquee_line.txt" > "$TEMP_DIR/news_marquee_line.txt.utf8" || cat "$TEMP_DIR/news_marquee_line.txt" > "$TEMP_DIR/news_marquee_line.txt.utf8"
     mv "$TEMP_DIR/news_marquee_line.txt.utf8" "$TEMP_DIR/news_marquee_line.txt"
   fi
 fi
+
+exit 0

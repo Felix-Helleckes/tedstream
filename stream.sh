@@ -16,7 +16,7 @@ BITRATE="2000k"
 BUF_SIZE="8000k"
 
 # Ensure all files exist
-for f in header_main_title.txt status_time.txt status_stats.txt news_marquee.txt portfolio.txt header_balances.txt data_balances.txt header_movers.txt data_movers.txt header_positions.txt data_positions.txt header_risk.txt data_risk.txt; do
+for f in header_main_title.txt status_time.txt status_stats.txt news_marquee.txt portfolio.txt header_balances.txt data_balances.txt header_movers.txt data_movers.txt header_positions.txt data_positions.txt data_risk.txt; do
   touch "$TEMP_DIR/$f"
 done
 

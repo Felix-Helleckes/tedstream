@@ -19,7 +19,6 @@ echo "KRAKEN BOT - LIVE LOG STREAM" > "$TEMP_DIR/header_main_title.txt"
 echo "BALANCES" > "$TEMP_DIR/header_balances.txt"
 echo "TOP MOVERS 24H" > "$TEMP_DIR/header_movers.txt"
 echo "OPEN POSITIONS" > "$TEMP_DIR/header_positions.txt"
-echo "RISK HUD" > "$TEMP_DIR/header_risk.txt"
 
 last_news_update=0
 last_movers_update=0
@@ -98,7 +97,7 @@ while true; do
       mv "$POS_TMP" "$TEMP_DIR/data_positions.txt"
     fi
 
-    # Risk HUD
+    # Risk HUD - only show Trades (Mode removed)
     RISK_TMP="/tmp/risk_list.$$"
     if [ -s "$BOT_DIR/mode.txt" ]; then
       MODE=$(cat "$BOT_DIR/mode.txt" | sed 's/^[ \t]*//;s/[ \t]*$//')

@@ -8,11 +8,11 @@ def extract_order_from_descr(line):
     m = re.search(r"descr\s*:\s*\{\s*['\"]order['\"]\s*:\s*['\"]([^'\"]+)['\"]", line)
     if m:
         order = m.group(1).strip()
-        # trim after '@ market' if present (keep the '@ market' part)
+        # trim after '@ market' if present (we'll drop the '@ market' part entirely per request)
         m2 = re.search(r"(@\s*market)", order, re.IGNORECASE)
         if m2:
-            idx = m2.end()
-            return order[:idx]
+            # keep only the part before '@' (drop '@ market')
+            return order[:m2.start()].strip()
         # otherwise remove "with ..." suffix if present
         order = re.sub(r"\s+with\s+.*$", "", order, flags=re.IGNORECASE)
         return order
@@ -36,7 +36,8 @@ def format_line(line):
                 vol_s = f"{volf:.2f}"
             except Exception:
                 vol_s = vol
-            return f"{typ} {vol_s} {pair} @ market" if '@ market' in order.lower() else f"{typ} {vol_s} {pair}"
+            # return without '@ market'
+            return f"{typ} {vol_s} {pair}"
         # if it doesn't match, just return the trimmed order
         return order
     # fallback: try to find inline order text like "sell 0.21968 SOLEUR @ market"
@@ -56,7 +57,7 @@ def format_line(line):
                 vol_s = f"{volf:.2f}"
             except Exception:
                 vol_s = vol
-            return f"{typ} {vol_s} {pair} @ market"
+            return f"{typ} {vol_s} {pair}"
         return candidate
     # fallback: find buy/sell and first numeric volume and pair
     m2 = re.search(r"\b(buy|sell)\b\s*([0-9]+(?:\.[0-9]+)?)\s*([A-Za-z/]+)", line, re.IGNORECASE)

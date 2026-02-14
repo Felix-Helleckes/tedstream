@@ -60,7 +60,7 @@ while true; do
         fi
         # fallback to logs if API fails
         # fallback to logs if API fails
-        grep -E "BUY ORDER SUCCESS|SELL ORDER SUCCESS|SHORT OPEN SUCCESS|EXECUTED|ORDER_FILLED|FILLED|TRADE" "$LOG_FILE" | tail -3 |         sed -E "s/'txid': '[^']+'/'txid': [REDACTED]/g" |         /home/felix/youtubestream/format_trade_line.py | sed -e "s/^/\t/" || true
+        grep -E "BUY ORDER SUCCESS|SELL ORDER SUCCESS|SHORT OPEN SUCCESS|EXECUTED|ORDER_FILLED|FILLED|TRADE" "$LOG_FILE" | tail -3 |         sed -E "s/'txid': '[^']+'/'txid': [REDACTED]/g" |         /home/felix/youtubestream/format_trade_line.py || true
         printf -- "----------\n"
         # Filter noisy system lines, mask TXIDs, and show last 23 log lines
         grep -vE "Validated trading pairs|Configuration loaded successfully" "$LOG_FILE" | \

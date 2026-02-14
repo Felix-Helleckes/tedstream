@@ -39,7 +39,7 @@ while true; do
     [ $(echo "$PNL >= 0" | bc -l) -eq 1 ] && LABEL="Profit" || LABEL="Loss"
 
     echo "$(date '+%Y-%m-%d %H:%M:%S')" > "$TEMP_DIR/status_time.txt.tmp" && mv "$TEMP_DIR/status_time.txt.tmp" "$TEMP_DIR/status_time.txt"
-    printf "Start: %.2fEUR | Now: %.2fEUR | %s: %.2fEUR (%s pct) | Target: %.1fEUR\n" "$START_BALANCE" "$NOW_EUR" "$LABEL" "$PNL" "$PCT" "$TARGET_BALANCE" > "$TEMP_DIR/status_stats.txt"
+    printf "Start: %.2fEUR | Now: %.2fEUR | %s: %.2fEUR (%s pct) | Target: %.0fEUR\n" "$START_BALANCE" "$NOW_EUR" "$LABEL" "$PNL" "$PCT" "$TARGET_BALANCE" > "$TEMP_DIR/status_stats.txt"
     
     last_second=$current_second
   fi

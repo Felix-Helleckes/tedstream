@@ -24,23 +24,40 @@ N=5
 CURL_TIMEOUT=8
 # User-Agent to reduce 403s
 UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"
+# Max title length (characters)
+MAX_LEN=100
 : > "$OUT_TMP"
 for entry in "${FEEDS[@]}"; do
   name="${entry%%|*}"
   url="${entry#*|}"
-  echo "${name}:" >> "$OUT_TMP"
+
   # fetch feed (max time) and extract titles; skip the first <title> (feed title)
-  # try to ensure UTF-8 output; if iconv available, normalize
   if curl -fsS -m $CURL_TIMEOUT -A "$UA" --compressed "$url" -o /tmp/news_feed.$$; then
     # extract title tags (skip feed title), trim whitespace
-    sed -n 's/<title>\(.*\)<\/title>/\1/p' /tmp/news_feed.$$ | sed '1d' | sed 's/^[ \t]*//;s/[ \t]*$//' | head -n $N | \
-      python3 -c "import sys,html;print('\n'.join(html.unescape(l.rstrip()) for l in sys.stdin))" >> "$OUT_TMP" || true
+    mapfile -t titles < <(sed -n 's/<title>\(.*\)<\/title>/\1/p' /tmp/news_feed.$$ | sed '1d' | sed 's/^[ \t]*//;s/[ \t]*$//' | head -n $N)
     rm -f /tmp/news_feed.$$
   else
-    echo "  (failed to fetch)" >> "$OUT_TMP"
+    titles=()
   fi
-  echo "" >> "$OUT_TMP"
+
+  # If we have at least one title, print the feed header and the titles
+  if [ ${#titles[@]} -gt 0 ]; then
+    echo "$name:" >> "$OUT_TMP"
+    for t in "${titles[@]}"; do
+      # decode HTML entities and normalize UTF-8, then truncate
+      clean=$(printf "%s" "$t" | python3 -c "import sys,html;print(html.unescape(sys.stdin.read().rstrip()))")
+      # remove newlines and collapse whitespace
+      clean=$(printf "%s" "$clean" | tr '\n' ' ' | sed 's/[ \t]\+/ /g' | sed 's/^[ \t]*//;s/[ \t]*$//')
+      if [ ${#clean} -gt $MAX_LEN ]; then
+        clean="${clean:0:$MAX_LEN}..."
+      fi
+      printf " - %s\n" "$clean" >> "$OUT_TMP"
+    done
+    echo "" >> "$OUT_TMP"
+  fi
+
 done
+
 # Ensure UTF-8 (attempt conversion if necessary)
 if command -v iconv >/dev/null 2>&1; then
   iconv -f utf-8 -t utf-8 -c "$OUT_TMP" > "$OUT_TMP".utf8 || cat "$OUT_TMP" > "$OUT_TMP".utf8
@@ -49,5 +66,4 @@ fi
 # Atomic move
 mv "$OUT_TMP" "$OUT_FILE"
 chmod 644 "$OUT_FILE"
-# done
 exit 0

@@ -1,0 +1,14 @@
+[Unit]
+Description=YouTube Kraken Stream
+After=network.target
+
+[Service]
+Type=simple
+User=felix
+WorkingDirectory=/home/felix/youtubestream
+ExecStart=/home/felix/youtubestream/stream.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

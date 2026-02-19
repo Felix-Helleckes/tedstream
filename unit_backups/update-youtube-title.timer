@@ -1,0 +1,10 @@
+[Unit]
+Description=Run YouTube title updater daily at 00:01
+
+[Timer]
+OnCalendar=*-*-* 00:01:00
+Persistent=true
+Unit=update-youtube-title.service
+
+[Install]
+WantedBy=timers.target

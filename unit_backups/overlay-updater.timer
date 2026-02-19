@@ -1,0 +1,10 @@
+[Unit]
+Description=Run overlay-updater every 30 seconds
+
+[Timer]
+OnBootSec=15s
+OnUnitActiveSec=30s
+Persistent=true
+
+[Install]
+WantedBy=timers.target

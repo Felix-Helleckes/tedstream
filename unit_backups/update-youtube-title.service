@@ -1,0 +1,11 @@
+[Unit]
+Description=Update YouTube Live Title (Day counter)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/felix/youtubestream
+ExecStart=/home/felix/youtubestream/.venv/bin/python /home/felix/youtubestream/update_youtube_title.py
+StandardOutput=append:/home/felix/youtubestream/title-updater.log
+StandardError=append:/home/felix/youtubestream/title-updater.log

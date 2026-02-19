@@ -19,6 +19,17 @@ def extract_order_from_descr(line):
     return None
 
 
+def round_floats_to_2(s: str) -> str:
+    # Round any floating-point numbers with more than 2 decimals to 2 decimals
+    def _round_match(m):
+        try:
+            v = float(m.group(0))
+            return f"{v:.2f}"
+        except Exception:
+            return m.group(0)
+    return re.sub(r"(?<![0-9.])([0-9]+\.[0-9]{3,})(?![0-9.])", lambda m: _round_match(m), s)
+
+
 def format_line(line):
     # redact txid values (arrays like ['ABC'])
     line = re.sub(r"'txid'\s*:\s*\[[^\]]*\]", "'txid': [REDACTED]", line)
@@ -39,7 +50,7 @@ def format_line(line):
             # return without '@ market'
             return f"{typ} {vol_s} {pair}"
         # if it doesn't match, just return the trimmed order
-        return order
+        return round_floats_to_2(order)
     # fallback: try to find inline order text like "sell 0.21968 SOLEUR @ market"
     m = re.search(r"\b(buy|sell)\b[^\n]{0,80}@\s*market", line, re.IGNORECASE)
     if m:
@@ -58,7 +69,7 @@ def format_line(line):
             except Exception:
                 vol_s = vol
             return f"{typ} {vol_s} {pair}"
-        return candidate
+        return round_floats_to_2(candidate)
     # fallback: find buy/sell and first numeric volume and pair
     m2 = re.search(r"\b(buy|sell)\b\s*([0-9]+(?:\.[0-9]+)?)\s*([A-Za-z/]+)", line, re.IGNORECASE)
     if m2:
@@ -74,7 +85,8 @@ def format_line(line):
     # otherwise, remove descr blocks and return trimmed line without keys
     line = re.sub(r"descr\s*:\s*\{[^}]*\}", "", line)
     line = re.sub(r"\s+", " ", line).strip()
-    return line
+    # round other numeric floats to 2 decimals
+    return round_floats_to_2(line)
 
 
 if __name__ == '__main__':

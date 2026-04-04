@@ -8,6 +8,10 @@
 
 ---
 
+![Stream Preview](preview.png)
+
+---
+
 ## 🎯 What is this?
 
 This repo powers a **live YouTube stream** that shows a Kraken algorithmic trading bot running in real time on a Raspberry Pi. Every 2 minutes the stream pulls fresh data directly from the Kraken API and renders it as a 1280×720 video overlay — balance, positions, trades, top movers, and a scrolling crypto news ticker.

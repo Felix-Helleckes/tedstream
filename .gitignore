@@ -1,0 +1,18 @@
+# Secrets
+.env
+.env.*
+
+# Runtime data
+balances.txt
+balances_test.tmp
+update_overlay.pid
+
+# Logs
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Temp files
+/tmp/

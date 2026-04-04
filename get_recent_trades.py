@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 from dotenv import load_dotenv
 import os
-sys.path.insert(0, '/home/felix/TradingBot')
+sys.path.insert(0, '/home/felix/tradingbot')
 try:
     from kraken_interface import KrakenAPI
 except Exception as e:
@@ -11,7 +11,7 @@ except Exception as e:
     sys.exit(1)
 
 # load environment from TradingBot .env if present
-env_path='/home/felix/TradingBot/.env'
+env_path='/home/felix/tradingbot/.env'
 if Path(env_path).exists():
     load_dotenv(env_path)
 

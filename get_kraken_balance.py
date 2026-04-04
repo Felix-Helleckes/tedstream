@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 import sys
-sys.path.insert(0, '/home/felix/TradingBot')
+sys.path.insert(0, '/home/felix/tradingbot')
 from kraken_interface import KrakenAPI
 import os
 from dotenv import load_dotenv
 
 # Load environment
-load_dotenv('/home/felix/TradingBot/.env')
+load_dotenv('/home/felix/tradingbot/.env')
 api_key = os.getenv('KRAKEN_API_KEY')
 api_secret = os.getenv('KRAKEN_API_SECRET')
 

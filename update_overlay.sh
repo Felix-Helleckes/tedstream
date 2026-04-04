@@ -5,7 +5,7 @@ LOCKFILE="/var/lock/update_overlay.lock"
 exec 200>"$LOCKFILE" || exit 1
 flock -n 200 || exit 0
 TEMP_DIR="/tmp/youtube_stream"
-BOT_DIR="/home/felix/TradingBot"
+BOT_DIR="/home/felix/tradingbot"
 LOG_FILE="$BOT_DIR/logs/bot_activity.log"
 MODE_FILE="$BOT_DIR/mode.txt"
 TRADES_FILE="$BOT_DIR/trades.txt"
@@ -22,7 +22,9 @@ echo "OPEN POSITIONS" > "$TEMP_DIR/header_positions.txt"
 
 last_news_update=0
 last_movers_update=0
+last_balance_update=0
 last_heavy_update=0
+last_trades_update=0
 last_second=""
 
 while true; do
@@ -38,7 +40,7 @@ while true; do
     [ $(echo "$PNL >= 0" | bc -l) -eq 1 ] && LABEL="Profit" || LABEL="Loss"
 
     echo "$(date '+%Y-%m-%d %H:%M:%S')" > "$TEMP_DIR/status_time.txt.tmp" && mv "$TEMP_DIR/status_time.txt.tmp" "$TEMP_DIR/status_time.txt"
-    printf "Start: %.2fEUR | Now: %.2fEUR | %s: %.2fEUR (%s pct) | Target: %.0fEUR\n" "$START_BALANCE" "$NOW_EUR" "$LABEL" "$PNL" "$PCT" "$TARGET_BALANCE" > "$TEMP_DIR/status_stats.txt"
+    printf "Balance: %.2f EUR\n" "$NOW_EUR" > "$TEMP_DIR/status_stats.txt"
     
     last_second=$current_second
   fi
@@ -51,16 +53,17 @@ while true; do
       PORT_TMP="/tmp/portfolio.$$"
       {
         printf "LAST TRADES:\n"
-        # Mask TXIDs and fetch last 3 trade actions
-        VENV_PY="\$BOT_DIR/venv/bin/python3"
-        if [ -x "\$VENV_PY" ]; then
-          "\$VENV_PY" /home/felix/youtubestream/get_recent_trades.py > /tmp/recent_trades.$$ 2>/dev/null && tail -n 3 /tmp/recent_trades.$$ | sed -e "s/^/\\t/" || true
-        else
-          /home/felix/youtubestream/get_recent_trades.py > /tmp/recent_trades.$$ 2>/dev/null && tail -n 3 /tmp/recent_trades.$$ | sed -e "s/^/\\t/" || true
+        # Fetch last 3 trades via API (max every 5 minutes to avoid rate limiting)
+        VENV_PY="$BOT_DIR/venv/bin/python3"
+        if [ $((now - last_trades_update)) -ge 120 ]; then
+          if [ -x "$VENV_PY" ]; then
+            "$VENV_PY" /home/felix/youtubestream/get_recent_trades.py > /tmp/recent_trades.$$ 2>/dev/null || true
+          else
+            /home/felix/youtubestream/get_recent_trades.py > /tmp/recent_trades.$$ 2>/dev/null || true
+          fi
+          last_trades_update=$now
         fi
-        # fallback to logs if API fails
-        # fallback to logs if API fails
-        grep -E "BUY ORDER SUCCESS|SELL ORDER SUCCESS|SHORT OPEN SUCCESS|EXECUTED|ORDER_FILLED|FILLED|TRADE" "$LOG_FILE" | tail -3 |         sed -E "s/'txid': '[^']+'/'txid': [REDACTED]/g" |         /home/felix/youtubestream/format_trade_line.py || true
+        [ -f /tmp/recent_trades.$$ ] && tail -n 3 /tmp/recent_trades.$$ | sed -e "s/^/\t/" || true
         printf -- "----------\n"
         # Filter noisy system lines, mask TXIDs, and show last 23 log lines
         grep -vE "Validated trading pairs|Configuration loaded successfully" "$LOG_FILE" | \
@@ -80,8 +83,11 @@ while true; do
         if [[ "$val_str" == *" - "* ]]; then
            qty=$(echo "$val_str" | cut -d' ' -f1)
            eur=$(echo "$val_str" | cut -d'-' -f2 | sed 's/EUR//;s/[ \t]*//')
-           printf "%-5s: %.2f - %.2f EUR\n" "$asset" "$qty" "$eur"
+           # skip zero positions
+           [ "$(printf "%.2f" "$eur" 2>/dev/null || echo 0)" = "0.00" ] && continue
+           printf "%-5s: %.4f (%.2f EUR)\n" "$asset" "$qty" "$eur"
         else
+           # EUR fiat line — no suffix needed, it's already EUR
            printf "%-5s: %.2f EUR\n" "$asset" "$val_str"
         fi
       done > "$BAL_TMP"
@@ -109,6 +115,11 @@ while true; do
   fi
 
   # 3. BACKGROUND FETCH
+  if [ $((now - last_balance_update)) -ge 120 ]; then
+    /home/felix/youtubestream/fetch_balances.sh &
+    last_balance_update=$now
+  fi
+
   if [ $((now - last_movers_update)) -ge 120 ]; then
     ( VENV_PY="$BOT_DIR/venv/bin/python3"
       [ -x "$VENV_PY" ] && "$VENV_PY" /home/felix/youtubestream/get_top_movers.py 2>/dev/null > "$TEMP_DIR/data_movers.txt.tmp" && sed -i 's/%/\\%/g' "$TEMP_DIR/data_movers.txt.tmp" && mv "$TEMP_DIR/data_movers.txt.tmp" "$TEMP_DIR/data_movers.txt"

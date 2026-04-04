@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 import sys
-sys.path.insert(0, '/home/felix/TradingBot')
+sys.path.insert(0, '/home/felix/tradingbot')
 from kraken_interface import KrakenAPI
 import os
 from dotenv import load_dotenv
 
 # Load environment
-env_path = '/home/felix/TradingBot/.env'
+env_path = '/home/felix/tradingbot/.env'
 if os.path.exists(env_path):
     load_dotenv(env_path)
 else:

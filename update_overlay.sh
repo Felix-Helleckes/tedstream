@@ -9,7 +9,7 @@ BOT_DIR="/home/felix/tradingbot"
 LOG_FILE="$BOT_DIR/logs/bot_activity.log"
 MODE_FILE="$BOT_DIR/mode.txt"
 TRADES_FILE="$BOT_DIR/trades.txt"
-START_BALANCE=340.00
+START_BALANCE=100.00
 TARGET_BALANCE=100000.0
 
 mkdir -p "$TEMP_DIR"
@@ -40,7 +40,7 @@ while true; do
     [ $(echo "$PNL >= 0" | bc -l) -eq 1 ] && LABEL="Profit" || LABEL="Loss"
 
     echo "$(date '+%Y-%m-%d %H:%M:%S')" > "$TEMP_DIR/status_time.txt.tmp" && mv "$TEMP_DIR/status_time.txt.tmp" "$TEMP_DIR/status_time.txt"
-    printf "Balance: %.2f EUR\n" "$NOW_EUR" > "$TEMP_DIR/status_stats.txt"
+    printf "%s: %+.2f EUR (%+.2f%%)\n" "$LABEL" "$PNL" "$PCT" > "$TEMP_DIR/status_stats.txt.tmp" && mv "$TEMP_DIR/status_stats.txt.tmp" "$TEMP_DIR/status_stats.txt"
     
     last_second=$current_second
   fi
@@ -83,12 +83,12 @@ while true; do
         if [[ "$val_str" == *" - "* ]]; then
            qty=$(echo "$val_str" | cut -d' ' -f1)
            eur=$(echo "$val_str" | cut -d'-' -f2 | sed 's/EUR//;s/[ \t]*//')
-           # skip zero positions
-           [ "$(printf "%.2f" "$eur" 2>/dev/null || echo 0)" = "0.00" ] && continue
+           # skip zero positions (check qty, not EUR value — price lookup can fail)
+           [ "$(printf "%.4f" "$qty" 2>/dev/null || echo 0)" = "0.0000" ] && continue
            printf "%-5s: %.4f (%.2f EUR)\n" "$asset" "$qty" "$eur"
         else
-           # EUR fiat line — no suffix needed, it's already EUR
-           printf "%-5s: %.2f EUR\n" "$asset" "$val_str"
+           # EUR fiat line — no redundant EUR suffix
+           printf "%-5s: %.2f\n" "$asset" "$val_str"
         fi
       done > "$BAL_TMP"
       T_VAL=$(grep '^TOTAL' "/home/felix/youtubestream/balances.txt" | awk '{print $(NF-1)}')

@@ -47,37 +47,37 @@ try:
     btc = float(balance.get('XXBT', 0))
     btc_value = btc * prices.get('XXBT', 0)
     total_value_eur += btc_value
-    print(f"BTC: {btc:.2f} - {btc_value:.2f}EUR")
+    print(f"BTC: {btc:.8f} - {btc_value:.2f}EUR")
 
     eth = float(balance.get('XETH', 0))
     eth_value = eth * prices.get('XETH', 0)
     total_value_eur += eth_value
-    print(f"ETH: {eth:.2f} - {eth_value:.2f}EUR")
+    print(f"ETH: {eth:.8f} - {eth_value:.2f}EUR")
 
     sol = float(balance.get('SOL', 0))
     sol_value = sol * prices.get('SOL', 0)
     total_value_eur += sol_value
-    print(f"SOL: {sol:.2f} - {sol_value:.2f}EUR")
+    print(f"SOL: {sol:.8f} - {sol_value:.2f}EUR")
 
     ada = float(balance.get('ADA', 0))
     ada_value = ada * prices.get('ADA', 0)
     total_value_eur += ada_value
-    print(f"ADA: {ada:.2f} - {ada_value:.2f}EUR")
+    print(f"ADA: {ada:.8f} - {ada_value:.2f}EUR")
 
     dot = float(balance.get('DOT', 0))
     dot_value = dot * prices.get('DOT', 0)
     total_value_eur += dot_value
-    print(f"DOT: {dot:.2f} - {dot_value:.2f}EUR")
+    print(f"DOT: {dot:.8f} - {dot_value:.2f}EUR")
 
     xrp = float(balance.get('XXRP', 0))
     xrp_value = xrp * prices.get('XXRP', 0)
     total_value_eur += xrp_value
-    print(f"XRP: {xrp:.2f} - {xrp_value:.2f}EUR")
+    print(f"XRP: {xrp:.8f} - {xrp_value:.2f}EUR")
 
     link = float(balance.get('LINK', 0))
     link_value = link * prices.get('LINK', 0)
     total_value_eur += link_value
-    print(f"LINK: {link:.2f} - {link_value:.2f}EUR")
+    print(f"LINK: {link:.8f} - {link_value:.2f}EUR")
         
     print("")
     print(f"TOTAL: {total_value_eur:.2f} EUR")

@@ -30,19 +30,9 @@ last_second=""
 while true; do
   current_second=$(date +%S)
   
-  # 1. HEADER (Fast)
+  # 1. CLOCK (Fast - every second)
   if [ "$current_second" != "$last_second" ]; then
-    NOW_EUR=$(grep -i '^TOTAL' /home/felix/youtubestream/balances.txt | awk '{print $(NF-1)}' 2>/dev/null || echo 0)
-    [ -z "$NOW_EUR" ] || [ "$NOW_EUR" = "0" ] && NOW_EUR=$(grep "Bal:" "$LOG_FILE" 2>/dev/null | tail -1 | sed -E 's/.*Bal: ([0-9.]+)EUR.*/\1/' || echo 0)
-    NOW_EUR=$(printf "%.2f" "$NOW_EUR")
-    PNL=$(awk -v n="$NOW_EUR" -v s="$START_BALANCE" 'BEGIN{printf("%.2f", n - s)}')
-    PCT=$(awk -v n="$NOW_EUR" -v s="$START_BALANCE" 'BEGIN{if(s>0) printf("%.2f", ((n/s)-1)*100); else printf("0.00")}')
-    [ $(echo "$PNL >= 0" | bc -l) -eq 1 ] && LABEL="Profit" || LABEL="Loss"
-
     echo "$(date '+%Y-%m-%d %H:%M:%S')" > "$TEMP_DIR/status_time.txt.tmp" && mv "$TEMP_DIR/status_time.txt.tmp" "$TEMP_DIR/status_time.txt"
-    STATUS_LINE=$(printf "Start: %.2f EUR | Aktuell: %.2f EUR | %+.2f%% | Ziel: %.0f EUR" "$START_BALANCE" "$NOW_EUR" "$PCT" "$TARGET_BALANCE")
-    printf "%s\n" "$STATUS_LINE" | sed 's/%/\\%/g' > "$TEMP_DIR/status_stats.txt.tmp" && mv "$TEMP_DIR/status_stats.txt.tmp" "$TEMP_DIR/status_stats.txt"
-    
     last_second=$current_second
   fi
 
@@ -67,7 +57,7 @@ while true; do
         [ -f /tmp/recent_trades.$$ ] && tail -n 3 /tmp/recent_trades.$$ | sed -e "s/^/\t/" || true
         printf -- "----------\n"
         # Filter noisy system lines, mask TXIDs, and show last 23 log lines
-        grep -vE "Validated trading pairs|Configuration loaded successfully" "$LOG_FILE" | \
+        grep -vE "Validated trading pairs|Configuration loaded successfully|Loaded [0-9]+ trades from" "$LOG_FILE" | \
         sed -E "s/'txid': '[^']+'/'txid': [REDACTED]/g" | \
         /home/felix/youtubestream/format_trade_line.py | \
         tail -23 2>/dev/null | sed -E 's/ \| RISK.*$//' | sed -E 's/^[0-9]{4}-[0-9]{2}-[0-9]{2} ([0-9]{2}:[0-9]{2}:[0-9]{2}),[0-9]{3}/\1/' | tac
@@ -79,7 +69,7 @@ while true; do
     # Balances
     if [ -s "/home/felix/youtubestream/balances.txt" ]; then
       BAL_TMP="/tmp/bal_list.$$"
-      grep -v '^TOTAL' "/home/felix/youtubestream/balances.txt" | grep -v '^$' | while read -r line; do
+      grep -v '^TOTAL' "/home/felix/youtubestream/balances.txt" | grep -v '^$' | grep -v '^POSITION:' | while read -r line; do
         asset=$(echo "$line" | cut -d: -f1); val_str=$(echo "$line" | cut -d: -f2- | sed 's/^[ \t]*//')
         if [[ "$val_str" == *" - "* ]]; then
            qty=$(echo "$val_str" | cut -d' ' -f1)
@@ -113,9 +103,12 @@ while true; do
 
     # Risk HUD - only show Trades (Mode removed)
     RISK_TMP="/tmp/risk_list.$$"
-    TRADES=$(grep -oE 'Trades: [0-9]+' "$LOG_FILE" 2>/dev/null | tail -1 | awk -F': ' '{print $2}' || echo 0)
-    printf "Trades: %s
-" "$TRADES" > "$RISK_TMP"
+    SESSION_TRADES=$(grep -oE 'Trades: [0-9]+' "$LOG_FILE" 2>/dev/null | tail -1 | awk -F': ' '{print $2}' || echo 0)
+    NAS_TRADES=$(grep -oE 'Loaded [0-9]+ trades from' "$LOG_FILE" 2>/dev/null | tail -1 | grep -oE '[0-9]+' || echo 0)
+    [ -z "$SESSION_TRADES" ] && SESSION_TRADES=0
+    [ -z "$NAS_TRADES" ] && NAS_TRADES=0
+    TRADES=$(( SESSION_TRADES + NAS_TRADES ))
+    printf "Trades: %s\n" "$TRADES" > "$RISK_TMP"
     sed -i 's/%/\%/g' "$RISK_TMP"
     mv "$RISK_TMP" "$TEMP_DIR/data_risk.txt"
 
@@ -124,7 +117,13 @@ while true; do
 
   # 3. BACKGROUND FETCH
   if [ $((now - last_balance_update)) -ge 120 ]; then
-    /home/felix/youtubestream/fetch_balances.sh &
+    /home/felix/youtubestream/fetch_balances.sh
+    NOW_EUR=$(grep -i '^TOTAL' /home/felix/youtubestream/balances.txt | awk '{print $(NF-1)}' 2>/dev/null || echo 0)
+    [ -z "$NOW_EUR" ] || [ "$NOW_EUR" = "0" ] && NOW_EUR=$(grep "Bal:" "$LOG_FILE" 2>/dev/null | tail -1 | sed -E 's/.*Bal: ([0-9.]+)EUR.*/\1/' || echo 0)
+    NOW_EUR=$(printf "%.2f" "$NOW_EUR")
+    PCT=$(awk -v n="$NOW_EUR" -v s="$START_BALANCE" 'BEGIN{if(s>0) printf("%.2f", ((n/s)-1)*100); else printf("0.00")}')
+    STATUS_LINE=$(printf "Start: %.2f EUR | Aktuell: %.2f EUR | %+.2f%% | Ziel: %.0f EUR" "$START_BALANCE" "$NOW_EUR" "$PCT" "$TARGET_BALANCE")
+    printf "%s\n" "$STATUS_LINE" | sed 's/%/\\%/g' > "$TEMP_DIR/status_stats.txt.tmp" && mv "$TEMP_DIR/status_stats.txt.tmp" "$TEMP_DIR/status_stats.txt"
     last_balance_update=$now
   fi
 

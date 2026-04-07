@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 """
 Update the YouTube live stream title with a day counter.
-Requires a YouTube Data API v3 OAuth token (token.json) in this directory.
-If credentials are missing, exits cleanly without error.
+Credentials are read from .env (YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET,
+YOUTUBE_REFRESH_TOKEN, YOUTUBE_TOKEN_URI) — no token.json needed.
 """
-import json
 import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-TOKEN_FILE = Path(__file__).parent / "token.json"
+from dotenv import load_dotenv
+
+ENV_FILE = Path(__file__).parent / ".env"
 STREAM_START_FILE = Path(__file__).parent / "stream_start_date.txt"
+
+load_dotenv(ENV_FILE)
 
 # Determine stream start date
 if STREAM_START_FILE.exists():
@@ -28,8 +31,13 @@ else:
 day_number = (datetime.now(tz=timezone.utc).date() - stream_start.date()).days + 1
 new_title = f"🤖 Kraken Trading Bot Live – Tag {day_number} | KI-Bot handelt Bitcoin, ETH & Co."
 
-if not TOKEN_FILE.exists():
-    print(f"[title-updater] No token.json found – skipping title update (would set: \"{new_title}\")")
+client_id = os.getenv("YOUTUBE_CLIENT_ID")
+client_secret = os.getenv("YOUTUBE_CLIENT_SECRET")
+refresh_token = os.getenv("YOUTUBE_REFRESH_TOKEN")
+token_uri = os.getenv("YOUTUBE_TOKEN_URI", "https://oauth2.googleapis.com/token")
+
+if not all([client_id, client_secret, refresh_token]):
+    print(f"[title-updater] YOUTUBE_CLIENT_ID/SECRET/REFRESH_TOKEN not set in .env – skipping (would set: \"{new_title}\")")
     sys.exit(0)
 
 try:
@@ -41,10 +49,15 @@ except ImportError:
     sys.exit(0)
 
 try:
-    creds = Credentials.from_authorized_user_file(str(TOKEN_FILE))
-    if creds.expired and creds.refresh_token:
-        creds.refresh(Request())
-        TOKEN_FILE.write_text(creds.to_json())
+    creds = Credentials(
+        token=None,
+        refresh_token=refresh_token,
+        token_uri=token_uri,
+        client_id=client_id,
+        client_secret=client_secret,
+        scopes=["https://www.googleapis.com/auth/youtube"],
+    )
+    creds.refresh(Request())
 
     youtube = build("youtube", "v3", credentials=creds)
 

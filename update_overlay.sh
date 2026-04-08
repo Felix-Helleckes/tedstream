@@ -69,34 +69,41 @@ while true; do
     # Balances
     if [ -s "/home/felix/youtubestream/balances.txt" ]; then
       BAL_TMP="/tmp/bal_list.$$"
-      grep -v '^TOTAL' "/home/felix/youtubestream/balances.txt" | grep -v '^$' | grep -v '^POSITION:' | while read -r line; do
-        asset=$(echo "$line" | cut -d: -f1); val_str=$(echo "$line" | cut -d: -f2- | sed 's/^[ \t]*//')
+      while IFS= read -r line; do
+        [ -z "$line" ] && continue
+        case "$line" in
+          TOTAL:*|POSITION:*) continue ;;
+        esac
+
+        asset="${line%%:*}"
+        val_str="${line#*:}"
+        val_str="$(printf "%s" "$val_str" | sed 's/^[ \t]*//')"
+
         if [[ "$val_str" == *" - "* ]]; then
-           qty=$(echo "$val_str" | cut -d' ' -f1)
-           eur=$(echo "$val_str" | cut -d'-' -f2 | sed 's/EUR//;s/[ \t]*//')
-           # skip zero positions (check qty, not EUR value — price lookup can fail)
+           qty="$(printf "%s" "$val_str" | cut -d' ' -f1)"
+           eur="$(printf "%s" "$val_str" | cut -d'-' -f2 | sed 's/EUR//;s/[ \t]*//')"
+           # skip zero spot balances
            [ "$(printf "%.4f" "$qty" 2>/dev/null || echo 0)" = "0.0000" ] && continue
            printf "%-5s: %.4f (%.2f EUR)\n" "$asset" "$qty" "$eur"
         else
-           # EUR fiat line — no redundant EUR suffix
-           printf "%-5s: %.2f\n" "$asset" "$val_str"
+           # EUR fiat line — only format if numeric
+           if printf "%.2f" "$val_str" >/dev/null 2>&1; then
+             printf "%-5s: %.2f\n" "$asset" "$val_str"
+           fi
         fi
-      done > "$BAL_TMP"
+      done < "/home/felix/youtubestream/balances.txt" > "$BAL_TMP"
       T_VAL=$(grep '^TOTAL' "/home/felix/youtubestream/balances.txt" | awk '{print $(NF-1)}')
       printf "\nTOTAL: %.2f EUR\n" "$T_VAL" >> "$BAL_TMP"
       sed -i 's/%/\\%/g' "$BAL_TMP"
       mv "$BAL_TMP" "$TEMP_DIR/data_balances.txt"
       
-      # Open Positions Data — parse POSITION: lines from balances.txt (margin positions)
+      # Open Positions Data — show only real margin positions, not spot holdings
       POS_TMP="/tmp/pos_list.$$"
       grep '^POSITION:' "/home/felix/youtubestream/balances.txt" 2>/dev/null | while read -r line; do
-        # Format: POSITION:SOL SHORT 0.5700 cost:40.00EUR pnl:+0.61EUR
         info="${line#POSITION:}"
         printf "%s\n" "$info"
       done > "$POS_TMP"
-      # Fallback: also include non-zero spot holdings
-      grep ' - ' "/home/felix/youtubestream/balances.txt" 2>/dev/null | grep -v ': 0.00000000 -' | awk -F'[: ]+' '{printf "%s SPOT: %.4f\n", $1, $2}' >> "$POS_TMP"
-      [ ! -s "$POS_TMP" ] && echo "(keine offenen Positionen)" > "$POS_TMP"
+      [ ! -s "$POS_TMP" ] && echo "(keine offenen Margin-Positionen)" > "$POS_TMP"
       sed -i 's/%/\\%/g' "$POS_TMP"
       mv "$POS_TMP" "$TEMP_DIR/data_positions.txt"
     fi

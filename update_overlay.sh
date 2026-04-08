@@ -54,11 +54,12 @@ while true; do
           fi
           last_trades_update=$now
         fi
-        [ -f /tmp/recent_trades.$$ ] && tail -n 3 /tmp/recent_trades.$$ | sed -e 's/^/  /' || printf "  (keine frischen Trades)\n"
+        [ -f /tmp/recent_trades.$$ ] && tail -n 3 /tmp/recent_trades.$$ | tac | sed -e 's/^/  /' || printf "  (keine frischen Trades)\n"
         printf -- "----------\n"
-        # Show the latest real bot log lines with minimal transformation.
+        # Show latest bot lines with newest first.
         grep -a -vE "Validated trading pairs|Configuration loaded successfully|Loaded [0-9]+ trades from|Pair normalized:" "$LOG_FILE" | \
           tail -n 23 | \
+          tac | \
           sed -E "s/'txid': '[^']+'/'txid': [REDACTED]/g" | \
           sed -E 's/^[0-9]{4}-[0-9]{2}-[0-9]{2} ([0-9]{2}:[0-9]{2}:[0-9]{2}),[0-9]{3} - /\1 /'
       } > "$PORT_TMP"

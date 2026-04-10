@@ -33,12 +33,15 @@ try:
     for txid, info in trades_dict.items():
         trades.append((info.get('time',0), txid, info))
     trades.sort(reverse=True)
+    from datetime import datetime
     for t in trades[:3]:
-        info=t[2]
-        pair=info.get('pair','')
-        typ=info.get('type','')
-        vol=info.get('vol','')
-        # normalize output: "sell 0.12 xbteur" (type lower, vol 2 decimals, pair lower)
+        info = t[2]
+        pair = info.get('pair', '')
+        typ = info.get('type', '')
+        vol = info.get('vol', '')
+        timestamp = info.get('time', 0)
+        # format timestamp
+        dt_str = datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
         try:
             volf = float(vol)
             vol_s = f"{volf:.2f}"
@@ -46,11 +49,9 @@ try:
             vol_s = vol
         typ_s = (typ or '').lower()
         pair_s = (pair or '').lower()
-        # try to preserve parenthetical/extra info from the 'descr' field if present
         paren = ''
         descr = info.get('descr', '')
         try:
-            # descr may be a dict with an 'order' key
             if isinstance(descr, dict):
                 order_txt = descr.get('order', '')
             else:
@@ -61,7 +62,7 @@ try:
                 paren = ' ' + m_paren.group(0)
         except Exception:
             paren = ''
-        print(f"{typ_s} {vol_s} {pair_s}{paren}")
+        print(f"{dt_str} {typ_s} {vol_s} {pair_s}{paren}")
 except Exception as e:
     print(f"Error fetching trades: {e}")
     sys.exit(1)

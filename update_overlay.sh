@@ -112,16 +112,13 @@ while true; do
 
     # Risk HUD - only show Trades (Mode removed)
     RISK_TMP="/tmp/risk_list.$$"
-    SESSION_TRADES=$(grep -oE 'Trades: [0-9]+' "$LOG_FILE" 2>/dev/null | tail -1 | awk -F': ' '{print $2}' || echo 0)
     NAS_TRADES=$(grep -oE 'Loaded [0-9]+ trades from' "$LOG_FILE" 2>/dev/null | tail -1 | grep -oE '[0-9]+' || echo 0)
-    [ -z "$SESSION_TRADES" ] && SESSION_TRADES=0
-    [ -z "$NAS_TRADES" ] && NAS_TRADES=0
-    TRADES=$(( SESSION_TRADES + NAS_TRADES ))
-    printf "Trades: %s\n" "$TRADES" > "$RISK_TMP"
-    sed -i 's/%/\%/g' "$RISK_TMP"
-    mv "$RISK_TMP" "$TEMP_DIR/data_risk.txt"
+[ -z "$NAS_TRADES" ] && NAS_TRADES=0
+printf "Trades: %s\n" "$NAS_TRADES" > "$RISK_TMP"
+sed -i 's/%/\%/g' "$RISK_TMP"
+mv "$RISK_TMP" "$TEMP_DIR/data_risk.txt"
 
-    last_heavy_update=$now
+last_heavy_update=$now
   fi
 
   # 3. BACKGROUND FETCH

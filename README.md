@@ -4,7 +4,7 @@
 
 [![Watch Live](https://img.shields.io/badge/▶_Watch_Live-YouTube-red?style=for-the-badge&logo=youtube)](https://www.youtube.com/@TheEfficientDev)
 [![Trading Bot](https://img.shields.io/badge/Trading_Bot-GitHub-181717?style=for-the-badge&logo=github)](https://github.com/irgendwasmitfelix/TradingBot)
-[![Portfolio](https://img.shields.io/badge/Portfolio-irgendwasmitfelix.github.io-0a66c2?style=for-the-badge&logo=github)](https://irgendwasmitfelix.github.io)
+[![Portfolio](https://img.shields.io/badge/Portfolio-felix-helleckes.github.io-0a66c2?style=for-the-badge&logo=github)](https://felix-helleckes.github.io/)
 
 ---
 
@@ -125,7 +125,7 @@ sudo journalctl -u youtube-overlay -f     # Live overlay logs
 
 **Felix** — [@irgendwasmitfelix](https://github.com/irgendwasmitfelix)
 
-🌐 [irgendwasmitfelix.github.io](https://irgendwasmitfelix.github.io) · 📺 [youtube.com/@TheEfficientDev](https://www.youtube.com/@TheEfficientDev) · 🤖 [TradingBot Repo](https://github.com/irgendwasmitfelix/TradingBot)
+🌐 [felix-helleckes.github.io](https://felix-helleckes.github.io) · 📺 [youtube.com/@TheEfficientDev](https://www.youtube.com/@TheEfficientDev) · 🤖 [TradingBot Repo](https://github.com/irgendwasmitfelix/TradingBot)
 
 ---
 

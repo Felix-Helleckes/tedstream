@@ -58,7 +58,7 @@ while true; do
         printf -- "----------\n"
         # Show latest bot lines with newest first.
         grep -a -vE "Validated trading pairs|Configuration loaded successfully|Loaded [0-9]+ trades from|Pair normalized:" "$LOG_FILE" | \
-          tail -n 23 | \
+          tail -n 20 | \
           tac | \
           sed -E "s/\s*[|] *[Bb]al.*$//" | \
           sed -E "s/'txid': '[^']+'/'txid': [REDACTED]/g" | \

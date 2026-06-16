@@ -34,7 +34,7 @@ for entry in "${FEEDS[@]}"; do
   # fetch feed (max time) and extract titles; skip the first <title> (feed title)
   if curl -fsS -m $CURL_TIMEOUT -A "$UA" --compressed "$url" -o /tmp/news_feed.$$; then
     # extract title tags (skip feed title), trim whitespace
-    mapfile -t titles < <(sed -n 's/<title>\(.*\)<\/title>/\1/p' /tmp/news_feed.$$ | sed '1d' | sed 's/^[ \t]*//;s/[ \t]*$//' | head -n $N)
+    mapfile -t titles < <(sed -n 's/<title>\(.*\)<\/title>/\1/p' /tmp/news_feed.$$ 2>/dev/null | sed '1d' 2>/dev/null | sed 's/^[ \t]*//;s/[ \t]*$//' 2>/dev/null | head -n $N)
     rm -f /tmp/news_feed.$$
   else
     titles=()
